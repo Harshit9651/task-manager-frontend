@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-ink-200;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-ink-25 text-ink-800 font-sans;
+    font-feature-settings: "ss01" on, "cv01" on;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display text-ink-900;
+  }
+
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-ink-200 rounded-full;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, theme('colors.ink.100') 25%, theme('colors.ink.50') 37%, theme('colors.ink.100') 63%);
+    background-size: 400% 100%;
+    @apply animate-shimmer;
+  }
+}
