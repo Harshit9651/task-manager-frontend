@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   USER: {
     PROFILE: "/users/profile",
     UPDATE_PROFILE: "/users/profile",
+    NOTIFICATION_PREFERENCES: "users/toggle_notification"
   },
 
   DASHBOARD: {

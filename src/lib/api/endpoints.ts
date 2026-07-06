@@ -14,6 +14,7 @@ export const UserEndpoints = {
   profile: () => API_ENDPOINTS.USER.PROFILE,
 
   updateProfile: () => API_ENDPOINTS.USER.UPDATE_PROFILE,
+  notificationPreferences: ()=> API_ENDPOINTS.USER.NOTIFICATION_PREFERENCES
 };
 
 export const DashboardEndpoints = {

@@ -16,7 +16,11 @@ export interface IUser {
   emailVerified: boolean;
   isActive: boolean;
   isDeleted: boolean;
-
+  notificationPreferences: {
+    dailyFollowUpReminder: boolean;
+    weeklyReport: boolean;
+    timezone: string;
+  };
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
