@@ -4,7 +4,7 @@ import type {
   CreateLeadRequest,
   UpdateLeadRequest,
   LeadQuery,
-  LeadStats
+  LeadStatus
 } from "../../types/lead";
 
 class LeadService {
@@ -56,7 +56,7 @@ class LeadService {
   ) {
     return await leadApi.update(id, payload);
   }
-  async updateStatus(id: string, status: LeadStats) {
+  async updateStatus(id: string, status: LeadStatus) {
     return await leadApi.updateStatus(id, status);
   }
 

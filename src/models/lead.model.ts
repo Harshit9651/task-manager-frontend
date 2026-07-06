@@ -1,4 +1,3 @@
-// models/lead.model.ts
 import type {
   ILead,
   LeadStatus,
@@ -17,7 +16,7 @@ interface Props {
   onDelete: (id: string) => Promise<void>;
 }
 
-// ── Presentation maps (single source of truth for lead styling) ──────────────
+
 const STATUS_TONE: Record<LeadStatus, Tone> = {
   new: 'brand',
   contacted: 'warning',
@@ -52,7 +51,7 @@ const FOLLOW_UP_BADGE: Record<Exclude<FollowUpUrgency, 'none'>, string> = {
 
 const MS_PER_DAY = 86_400_000;
 
-// ── Shared formatting helpers (also exposed as statics below) ────────────────
+
 const titleize = (value: string): string =>
   value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -64,16 +63,7 @@ const parseDate = (iso?: string | null): Date | null => {
 
 const startOfDay = (d: Date): Date => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
-/**
- * Client-side model for a single lead.
- * Wraps a raw ILead and exposes all derived / display logic in one place.
- *
- *   const model = LeadModel.from(lead);
- *   model.initials            // "JD"
- *   model.statusTone          // "warning"
- *   model.followUpLabel       // "Overdue · Jul 2, 2026"
- *   model.raw                 // the untouched ILead (for editing, service calls)
- */
+
 export class LeadModel {
   readonly raw: ILead;
 
@@ -89,7 +79,7 @@ export class LeadModel {
     return leads.map((lead) => new LeadModel(lead));
   }
 
-  // ── Identity ──────────────────────────────────────────────────────────────
+
   get id(): string {
     return this.raw._id;
   }
@@ -100,8 +90,6 @@ export class LeadModel {
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
-
-  // ── Core display fields ─────────────────────────────────────────────────────
   get name(): string {
     return this.raw.contactName;
   }
@@ -118,12 +106,12 @@ export class LeadModel {
     return this.raw.phone;
   }
 
-  /** "CTO · Acme Corp" or just "Acme Corp" when no designation. */
+
   get subtitle(): string {
     return this.raw.designation ? `${this.raw.designation} · ${this.raw.company}` : this.raw.company;
   }
 
-  /** "San Francisco, USA" — empty string when neither is set. */
+
   get location(): string {
     return [this.raw.city, this.raw.country].filter(Boolean).join(', ');
   }
@@ -140,7 +128,6 @@ export class LeadModel {
     return this.raw.isArchived;
   }
 
-  // ── Enums → labels & tones ──────────────────────────────────────────────────
   get status(): LeadStatus {
     return this.raw.status;
   }

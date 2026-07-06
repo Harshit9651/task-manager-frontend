@@ -19,14 +19,17 @@ export const API_ENDPOINTS = {
     RECENT_ACTIVITY: "/dashboard/recent-activity",
   },
 
-  TASKS: {
-    LIST: "/tasks",
-    CREATE: "/tasks",
-    DETAILS: (id: string) => `/tasks/${id}`,
-    UPDATE: (id: string) => `/tasks/${id}`,
-    DELETE: (id: string) => `/tasks/${id}`,
-    COMPLETE: (id: string) => `/tasks/${id}/complete`,
-  },
+TASKS: {
+  LIST: "/tasks",
+  CREATE: "/tasks",
+  HISTORY: "/tasks/history",
+  STATS: "/tasks/stats",
+  DETAILS: (id: string) => `/tasks/${id}`,
+  UPDATE: (id: string) => `/tasks/${id}`,
+  STATUS: (id: string) => `/tasks/${id}/status`,
+  DELETE: (id: string) => `/tasks/${id}`,
+  RESTORE: (id: string) => `/tasks/${id}/restore`,
+},
 
  LEADS: {
   LIST: "/leads",

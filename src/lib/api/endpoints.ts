@@ -21,11 +21,14 @@ export const DashboardEndpoints = {
 
   recentActivity: () => API_ENDPOINTS.DASHBOARD.RECENT_ACTIVITY,
 };
-
 export const TaskEndpoints = {
   list: () => API_ENDPOINTS.TASKS.LIST,
 
   create: () => API_ENDPOINTS.TASKS.CREATE,
+
+  history: () => API_ENDPOINTS.TASKS.HISTORY,
+
+  stats: () => API_ENDPOINTS.TASKS.STATS,
 
   details: (taskId: string) =>
     API_ENDPOINTS.TASKS.DETAILS(taskId),
@@ -33,11 +36,14 @@ export const TaskEndpoints = {
   update: (taskId: string) =>
     API_ENDPOINTS.TASKS.UPDATE(taskId),
 
+  status: (taskId: string) =>
+    API_ENDPOINTS.TASKS.STATUS(taskId),
+
   delete: (taskId: string) =>
     API_ENDPOINTS.TASKS.DELETE(taskId),
 
-  complete: (taskId: string) =>
-    API_ENDPOINTS.TASKS.COMPLETE(taskId),
+  restore: (taskId: string) =>
+    API_ENDPOINTS.TASKS.RESTORE(taskId),
 };
 
 export const LeadEndpoints = {
