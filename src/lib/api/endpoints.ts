@@ -99,6 +99,20 @@ export const AIEndpoints = {
 
   automations: () => API_ENDPOINTS.AI.AUTOMATIONS,
 };
+export const BoardEndpoints = {
+  list: () => API_ENDPOINTS.BOARDS.LIST,
+
+  create: () => API_ENDPOINTS.BOARDS.CREATE,
+
+  details: (boardId: string) =>
+    API_ENDPOINTS.BOARDS.DETAILS(boardId),
+
+  update: (boardId: string) =>
+    API_ENDPOINTS.BOARDS.UPDATE(boardId),
+
+  delete: (boardId: string) =>
+    API_ENDPOINTS.BOARDS.DELETE(boardId),
+};
 
 export const Endpoints = {
   auth: AuthEndpoints,
@@ -109,6 +123,7 @@ export const Endpoints = {
   emails: EmailEndpoints,
   campaigns: CampaignEndpoints,
   ai: AIEndpoints,
+  bords : BoardEndpoints
 };
 
 export default Endpoints;

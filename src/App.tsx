@@ -10,6 +10,8 @@ import TotalLeads from './pages/TotalLeads';
 import Emails from './pages/Emails';
 import BulkEmail from './pages/BulkEmail';
 import Settings from './pages/Settings';
+import Whiteboards from './pages/Whiteboards';
+import WhiteboardEditor from './pages/WhiteboardEditor';
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
              <Route path="leads/edit/:id" element={<AddLeads />} />
             <Route path="leads" element={<TotalLeads />} />
             <Route path="emails" element={<Emails />} />
+            <Route path="whiteboards" element={<Whiteboards />} />
+<Route path="whiteboards/:id" element={<WhiteboardEditor />} />
             <Route path="bulk-email" element={<BulkEmail />} />
             <Route path="settings" element={<Settings />} />
 

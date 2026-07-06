@@ -8,6 +8,7 @@ export const primaryNav: NavItem[] = [
   { label: 'Emails', path: '/app/emails', icon: 'Mail' },
   { label: 'Bulk Email', path: '/app/bulk-email', icon: 'Rocket' },
   { label: 'Settings', path: '/app/settings', icon: 'Settings' },
+  {label: 'White Board', path:'/app/whiteboards',icon:'LayoutDashboard'}
 ];
 
 export const comingSoonNav: NavItem[] = [

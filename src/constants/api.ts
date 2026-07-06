@@ -45,6 +45,11 @@ TASKS: {
   FOLLOW_UP: (id: string) => `/leads/${id}/follow-up`,
   RESTORE: (id: string) => `/leads/${id}/restore`,
 },
+ list: () => '/boards',
+    create: () => '/boards',
+    details: (id: string) => `/boards/${id}`,
+    update: (id: string) => `/boards/${id}`,
+    delete: (id: string) => `/boards/${id}`,
 
   EMAILS: {
     LIST: "/emails",
@@ -61,6 +66,13 @@ TASKS: {
     DELETE: (id: string) => `/campaigns/${id}`,
   },
 
+    BOARDS: {
+    LIST: "/boards",
+    CREATE: "/boards",
+    DETAILS: (id: string) => `/boards/${id}`,
+    UPDATE: (id: string) => `/boards/${id}`,
+    DELETE: (id: string) => `/boards/${id}`,
+  },
   AI: {
     CHAT: "/ai/chat",
     AUTOMATIONS: "/ai/automations",
