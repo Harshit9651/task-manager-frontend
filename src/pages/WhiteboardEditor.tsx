@@ -3,27 +3,32 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tldraw, type Editor, type TLEditorSnapshot } from 'tldraw';
 import 'tldraw/tldraw.css';
-import { ArrowLeft, Check, Loader2, CloudOff, Pencil } from 'lucide-react';
+import { ArrowLeft, Check, Loader2, CloudOff, Pencil, Cloud, CalendarDays } from 'lucide-react';
 import { useBoardEditor } from '../lib/hooks/useBoardEditor';
 import type { BoardSnapshot } from '../types/board';
 
+// Coerce invalid meta:undefined so v5's validator accepts older saves.
 function sanitizeSnapshot(snap: Record<string, unknown>): Record<string, unknown> {
   try {
     const clone = JSON.parse(JSON.stringify(snap)) as Record<string, unknown>;
-    const doc = clone.document as { store?: Record<string, { meta?: unknown }> } | undefined;
-    const store = doc?.store;
+    const store = (clone.document as { store?: Record<string, { meta?: unknown }> } | undefined)?.store;
     if (store && typeof store === 'object') {
       for (const rec of Object.values(store)) {
-        if (rec && typeof rec === 'object' && rec.meta === undefined) {
-          rec.meta = {};
-        }
+        if (rec && typeof rec === 'object' && rec.meta === undefined) rec.meta = {};
       }
     }
     return clone;
   } catch {
-    return snap; // if anything goes wrong, fall back to the original
+    return snap;
   }
 }
+
+const formatBoardDate = (iso?: string): string => {
+  if (!iso) return '';
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
+
 export default function WhiteboardEditor() {
   const { id = '' } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -39,9 +44,7 @@ export default function WhiteboardEditor() {
     if (board) setTitleValue(board.title);
   }, [board]);
 
-  const handleMount = useCallback((ed: Editor) => {
-    setEditor(ed);
-  }, []);
+  const handleMount = useCallback((ed: Editor) => setEditor(ed), []);
 
   useEffect(() => {
     if (!editor || !board) return;
@@ -51,30 +54,23 @@ export default function WhiteboardEditor() {
     const snap = board.snapshot as Record<string, unknown> | null | undefined;
     const hasSnap = !!snap && typeof snap === 'object' && Object.keys(snap).length > 0;
 
-   // WhiteboardEditor.tsx — load ke andar, editor.loadSnapshot() se pehle
-if (hasSnap) {
-  try {
+    if (hasSnap) {
+      try {
+        editor.loadSnapshot(sanitizeSnapshot(snap) as TLEditorSnapshot);
+        if (editor.getCurrentPageShapeIds().size > 0) editor.zoomToFit();
+      } catch (err) {
+        console.error('Snapshot load failed — starting blank:', err);
+      }
+    }
 
-    const sanitized = sanitizeSnapshot(snap);
-    editor.loadSnapshot(sanitized as TLEditorSnapshot);
-    if (editor.getCurrentPageShapeIds().size > 0) editor.zoomToFit();
-  } catch (err) {
-    console.error('Snapshot load failed — starting blank:', err);
-  }
-}
-    // Autosave: v5 save via the EDITOR method too -> returns { document, session }.
     const unsubscribe = editor.store.listen(
       () => {
         try {
-          const snapshot = editor.getSnapshot() as unknown as BoardSnapshot;
-          scheduleSave(snapshot);
-        } catch {
-          // ignore transient errors during teardown
-        }
+          scheduleSave(editor.getSnapshot() as unknown as BoardSnapshot);
+        } catch { /* ignore teardown */ }
       },
       { source: 'user', scope: 'document' },
     );
-
     return () => unsubscribe();
   }, [editor, board, scheduleSave]);
 
@@ -100,24 +96,40 @@ if (hasSnap) {
       <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center gap-3">
         <CloudOff className="h-8 w-8 text-ink-300" />
         <p className="text-sm text-ink-500">{error || 'Board not found'}</p>
-        <button onClick={() => navigate('/whiteboards')} className="text-sm font-medium text-brand-600 hover:underline">
+        <button onClick={() => navigate('/app/whiteboards')} className="text-sm font-medium text-brand-600 hover:underline">
           Back to boards
         </button>
       </div>
     );
   }
 
+  // Animated save pill.
+  const SavePill = () => {
+    const base = 'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors';
+    if (saveState === 'saving') return <span className={`${base} bg-amber-50 text-amber-600`}><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving</span>;
+    if (saveState === 'saved') return <span className={`${base} bg-emerald-50 text-emerald-600`}><Check className="h-3.5 w-3.5" /> Saved</span>;
+    if (saveState === 'error') return <span className={`${base} bg-danger-50 text-danger-600`}><CloudOff className="h-3.5 w-3.5" /> Save failed</span>;
+    return <span className={`${base} bg-ink-100 text-ink-400`}><Cloud className="h-3.5 w-3.5" /> Synced</span>;
+  };
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-3">
+      {/* ClickUp-style top bar */}
+      <div className="flex items-center justify-between gap-3 border-b border-ink-100 bg-white px-4 py-2.5 shadow-sm">
+        <div className="flex min-w-0 items-center gap-2.5">
           <button
             onClick={() => navigate('/app/whiteboards')}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ink-600 hover:bg-ink-100"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-800"
+            aria-label="Back to boards"
           >
-            <ArrowLeft className="h-4 w-4" /> Boards
+            <ArrowLeft className="h-4 w-4" />
           </button>
-          <div className="h-5 w-px bg-ink-200" />
+
+          {/* gradient board dot */}
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 text-[11px] font-bold text-white shadow-sm">
+            {board.title.charAt(0).toUpperCase()}
+          </span>
+
           {editingTitle ? (
             <input
               autoFocus
@@ -125,22 +137,27 @@ if (hasSnap) {
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={() => void commitTitle()}
               onKeyDown={(e) => e.key === 'Enter' && void commitTitle()}
-              className="min-w-0 rounded-lg border border-ink-200 px-2.5 py-1 text-sm font-medium text-ink-900 outline-none focus:border-brand-400"
+              className="min-w-0 rounded-lg border border-brand-300 px-2.5 py-1 text-sm font-semibold text-ink-900 outline-none ring-4 ring-brand-100"
             />
           ) : (
             <button onClick={() => setEditingTitle(true)} className="group flex min-w-0 items-center gap-1.5" title="Rename board">
               <span className="truncate text-sm font-semibold text-ink-900">{board.title}</span>
-              <Pencil className="h-3 w-3 shrink-0 text-ink-300 opacity-0 group-hover:opacity-100" />
+              <Pencil className="h-3 w-3 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100" />
             </button>
           )}
+
+          {/* date pill */}
+          <span className="hidden items-center gap-1 rounded-full bg-ink-100 px-2.5 py-1 text-xs font-medium text-ink-500 sm:flex">
+            <CalendarDays className="h-3 w-3" /> {formatBoardDate(board.boardDate)}
+          </span>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5 text-xs text-ink-400">
-          {saveState === 'saving' && (<><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</>)}
-          {saveState === 'saved' && (<><Check className="h-3.5 w-3.5 text-success-500" /> Saved</>)}
-          {saveState === 'error' && (<><CloudOff className="h-3.5 w-3.5 text-danger-500" /> <span className="text-danger-500">Save failed</span></>)}
+
+        <div className="flex shrink-0 items-center gap-2">
+          <SavePill />
         </div>
       </div>
 
+      {/* Canvas — untouched */}
       <div className="relative flex-1">
         <Tldraw onMount={handleMount} />
       </div>

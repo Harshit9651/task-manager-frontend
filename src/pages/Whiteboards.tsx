@@ -1,8 +1,10 @@
+// src/pages/Whiteboards.tsx
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus, PenTool, Trash2, CalendarDays, Search, AlertCircle, Loader2, Clock,
+  ArrowUpRight, LayoutGrid, Sparkles,
 } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import Card from '../components/ui/Card';
@@ -29,6 +31,23 @@ const formatDateLabel = (iso: string): string => {
 const formatTime = (iso: string): string =>
   new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
+// Each board gets a stable, colorful cover — ClickUp's boards feel lively, not grey.
+const COVERS = [
+  { grad: 'from-violet-500 to-purple-600', soft: 'bg-violet-500' },
+  { grad: 'from-sky-500 to-blue-600', soft: 'bg-sky-500' },
+  { grad: 'from-amber-400 to-orange-500', soft: 'bg-amber-500' },
+  { grad: 'from-emerald-500 to-teal-600', soft: 'bg-emerald-500' },
+  { grad: 'from-rose-500 to-pink-600', soft: 'bg-rose-500' },
+  { grad: 'from-indigo-500 to-blue-600', soft: 'bg-indigo-500' },
+  { grad: 'from-fuchsia-500 to-purple-600', soft: 'bg-fuchsia-500' },
+  { grad: 'from-cyan-500 to-teal-600', soft: 'bg-cyan-500' },
+];
+const coverFor = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return COVERS[h % COVERS.length];
+};
+
 export default function Whiteboards() {
   const navigate = useNavigate();
   const { grouped, loading, error, refetch, createBoard, deleteBoard, todayISO } = useBoards();
@@ -39,7 +58,6 @@ export default function Whiteboards() {
   const [boardDate, setBoardDate] = useState(todayISO());
   const [creating, setCreating] = useState(false);
 
-  // Client-side title filter over the grouped structure.
   const filtered = useMemo(() => {
     if (!search.trim()) return grouped;
     const q = search.toLowerCase();
@@ -47,6 +65,10 @@ export default function Whiteboards() {
       .map(([date, boards]) => [date, boards.filter((b) => b.title.toLowerCase().includes(q))] as [string, BoardSummary[]])
       .filter(([, boards]) => boards.length > 0);
   }, [grouped, search]);
+
+  const totalBoards = useMemo(() => grouped.reduce((s, [, b]) => s + b.length, 0), [grouped]);
+  const activeDays = grouped.length;
+  const todaysCount = grouped.find(([d]) => d === todayISO())?.[1].length ?? 0;
 
   const openCreate = () => {
     setTitle('');
@@ -93,6 +115,25 @@ export default function Whiteboards() {
         }
       />
 
+      {/* Stat pills — ClickUp-style quick metrics */}
+      <div className="mb-6 grid grid-cols-3 gap-3 sm:max-w-lg">
+        {[
+          { icon: LayoutGrid, label: 'Total boards', value: totalBoards, tint: 'text-violet-600 bg-violet-50' },
+          { icon: CalendarDays, label: 'Active days', value: activeDays, tint: 'text-sky-600 bg-sky-50' },
+          { icon: Sparkles, label: 'Today', value: todaysCount, tint: 'text-amber-600 bg-amber-50' },
+        ].map((s) => (
+          <Card key={s.label} className="flex items-center gap-3 px-4 py-3">
+            <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${s.tint}`}>
+              <s.icon className="h-4 w-4" />
+            </span>
+            <div>
+              <p className="text-lg font-bold leading-none text-ink-900">{s.value}</p>
+              <p className="mt-1 text-xs text-ink-400">{s.label}</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+
       <div className="mb-6 max-w-md">
         <Input
           icon={<Search className="h-4 w-4" />}
@@ -125,47 +166,78 @@ export default function Whiteboards() {
         />
       )}
 
-      {/* Date-grouped journal */}
+      {/* Date-grouped journal with a timeline rail */}
       <div className="space-y-8">
         {filtered.map(([date, boards]) => (
-          <div key={date}>
-            <div className="mb-3 flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-ink-400" />
-              <h3 className="text-sm font-semibold text-ink-700">{formatDateLabel(date)}</h3>
-              <span className="text-xs text-ink-400">· {boards.length} board{boards.length > 1 ? 's' : ''}</span>
+          <div key={date} className="relative">
+            <div className="mb-4 flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50 text-violet-600 ring-4 ring-violet-50/40">
+                <CalendarDays className="h-4 w-4" />
+              </span>
+              <h3 className="text-[15px] font-bold text-ink-900">{formatDateLabel(date)}</h3>
+              <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold text-ink-500">
+                {boards.length} board{boards.length > 1 ? 's' : ''}
+              </span>
+              <div className="ml-1 h-px flex-1 bg-gradient-to-r from-ink-100 to-transparent" />
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {boards.map((board) => (
-                <motion.div key={board._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-                  <Card
-                    hoverable
-                    onClick={() => navigate(`/app/whiteboards/${board._id}`)}
-                    className="group cursor-pointer overflow-hidden"
-                  >
-                    {/* Thumbnail / placeholder */}
-                    <div className="relative flex h-36 items-center justify-center border-b border-ink-100 bg-ink-25">
-                      {board.thumbnail ? (
-                        <img src={board.thumbnail} alt={board.title} className="h-full w-full object-cover" />
-                      ) : (
-                        <PenTool className="h-8 w-8 text-ink-200" />
-                      )}
-                      <button
-                        onClick={(e) => void handleDelete(board._id, e)}
-                        className="absolute right-2 top-2 rounded-lg bg-white/90 p-1.5 text-ink-400 opacity-0 shadow-sm transition-opacity hover:text-danger-500 group-hover:opacity-100"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                    <div className="p-4">
-                      <p className="truncate font-medium text-ink-800">{board.title}</p>
-                      <div className="mt-1 flex items-center gap-1.5 text-xs text-ink-400">
-                        <Clock className="h-3 w-3" /> Edited {formatTime(board.updatedAt)}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {boards.map((board) => {
+                const cover = coverFor(board._id);
+                return (
+                  <motion.div key={board._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+                    <Card
+                      hoverable
+                      onClick={() => navigate(`/app/whiteboards/${board._id}`)}
+                      className="group relative cursor-pointer overflow-hidden !p-0 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      {/* Colorful cover with a subtle grid/doodle overlay */}
+                      <div className={`relative h-32 overflow-hidden bg-gradient-to-br ${cover.grad}`}>
+                        {board.thumbnail ? (
+                          <img src={board.thumbnail} alt={board.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <>
+                            {/* dotted-grid pattern -> reads as a whiteboard */}
+                            <div
+                              className="absolute inset-0 opacity-30"
+                              style={{
+                                backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.5) 1px, transparent 1px)',
+                                backgroundSize: '16px 16px',
+                              }}
+                            />
+                            <PenTool className="absolute left-4 top-4 h-6 w-6 text-white/70" />
+                          </>
+                        )}
+                        {/* hover actions */}
+                        <div className="absolute right-3 top-3 flex items-center gap-1.5 opacity-0 transition-all group-hover:opacity-100">
+                          <button
+                            onClick={(e) => void handleDelete(board._id, e)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/95 text-ink-400 shadow-sm backdrop-blur transition-colors hover:text-danger-500"
+                            aria-label="Delete board"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        {/* open affordance */}
+                        <div className="absolute bottom-3 right-3 flex h-8 w-8 translate-y-2 items-center justify-center rounded-lg bg-white/95 text-ink-700 opacity-0 shadow-md backdrop-blur transition-all group-hover:translate-y-0 group-hover:opacity-100">
+                          <ArrowUpRight className="h-4 w-4" />
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+
+                      {/* Card body */}
+                      <div className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${cover.soft}`} />
+                          <p className="truncate font-semibold text-ink-800">{board.title}</p>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-400">
+                          <Clock className="h-3 w-3" /> Edited {formatTime(board.updatedAt)}
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         ))}
